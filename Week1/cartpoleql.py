@@ -15,9 +15,9 @@ env = gym.make("CartPole-v1")
 env.action_space.seed(82)
 np.random.seed(82)
 
-n_episodes = 2000
-max_steps = 200
-learning_rate = 0.1
+n_episodes = 4000
+max_steps = 400
+learning_rate = 0.05
 discount_factor = 0.99
 epsilon = 1.0
 epsilon_min = 0.01
@@ -36,6 +36,7 @@ rewards = []
 for episode in tqdm(range(n_episodes)):
     observation, info = env.reset(seed=82)
     state = discretize_state(observation, bins)
+    total_reward = 0  # Track the total reward for this episode
 
     for step in range(max_steps):
         if np.random.uniform(0, 1) < epsilon:
@@ -52,12 +53,19 @@ for episode in tqdm(range(n_episodes)):
         q_table[state][action] += learning_rate * td_error
 
         state = next_state
+        total_reward += reward
 
         if terminated or truncated:
             break
     
+    rewards.append(total_reward)
+
     if epsilon > epsilon_min:
         epsilon *= epsilon_decay
+
+    if (episode + 1) % 100 == 0:
+        avg_reward = np.mean(rewards[-100:])
+        print(f"Episode {episode + 1}/{n_episodes}, Average Reward: {avg_reward:.2f}, Epsilon: {epsilon:.2f}")
 
 env.close()
 
